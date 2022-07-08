@@ -43,11 +43,11 @@ module.exports = {
       initialDate: "2021-04-04T00:00:00.000+00:00",
       saveDeployments: true,
       allowUnlimitedContractSize: true,
-      tags: ["nft", "marketplace", "test"],
+      tags: ["ido", "presale", "test"],
     },
     ropsten: {
       url: `https://ropsten.infura.io/v3/${process.env.INFURA_ID}`,
-      tags: ["nft", "marketplace", "test"],
+      tags: ["ido", "presale", "test"],
       chainId: 3,
       accounts: real_accounts,
       gas: 2100000,
@@ -55,7 +55,7 @@ module.exports = {
     },
     rinkeby: {
       url: `https://rinkeby.infura.io/v3/${process.env.INFURA_ID}`,
-      tags: ["nft", "marketplace", "test"],
+      tags: ["ido", "presale", "test"],
       chainId: 4,
       accounts: real_accounts,
       gas: 2100000,
@@ -63,7 +63,7 @@ module.exports = {
     },
     avalancheFuji: {
       url: `https://api.avax-test.network/ext/bc/C/rpc`,
-      tags: ["nft", "marketplace", "test"],
+      tags: ["ido", "presale", "test"],
       chainId: 43113,
       accounts: real_accounts,
       gas: 'auto',
