@@ -15,28 +15,14 @@ contract IDOToken is ERC20, Ownable {
         _transferOwnership(_treasuryWallet);
     }
 
-    /**
-     * @dev See {ERC20-minSupply}.
-     */
     function minSupply() external pure returns (uint256) {
         return _minSupply;
     }
 
-    /**
-     * @dev See {ERC20-maxSupply}.
-     */
     function maxSupply() external pure returns (uint256) {
         return _maxSupply;
     }
 
-    /**
-     * @dev Creates `amount` tokens and assigns them to `msg.sender`, increasing
-     * the total supply.
-     *
-     * Requirements
-     *
-     * - `msg.sender` must be the token owner
-     */
     function mint(address dest, uint256 amount) external returns (bool) {
         require(
             msg.sender == ido || msg.sender == owner(),
@@ -47,9 +33,6 @@ contract IDOToken is ERC20, Ownable {
         return true;
     }
 
-    /**
-     * @dev Burn `amount` tokens and decreasing the total supply.
-     */
     function burn(uint256 amount) public returns (bool) {
         _burn(_msgSender(), amount);
         return true;
