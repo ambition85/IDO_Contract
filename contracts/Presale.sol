@@ -193,7 +193,7 @@ contract Presale is Ownable {
         UserDetail storage user = userInfo[msg.sender];
         uint256 withdrawable = (user.depositAmount * (100 - minToVault)) / 100;
 
-        require(withdrawable > 0, "No USDC To Claim");
+        require(withdrawable > 0, "No USDC To Withdraw");
 
         // Transfer usdc to user
         usdc.transfer(msg.sender, withdrawable);
@@ -203,7 +203,7 @@ contract Presale is Ownable {
     }
 
     function claimableAmount(address account) public view returns (uint256) {
-        if (block.timestamp < claimTime) return 0;
+        if (block.timestamp < claimTime || totalUSDC < softCap) return 0;
         UserDetail storage user = userInfo[account];
 
         // Calculate how many rounds have passed so far
