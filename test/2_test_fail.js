@@ -28,7 +28,7 @@ describe('Test Presale DAYL Success Senario', function () {
     presale = await Presale.deploy([
       timeNow, //_startTime,
       timeNow + 3600, // _endTime,
-      timeNow + 5000, // _endTime,
+      timeNow + 5000, // _claimTime,
       pDAYL.address, // _presaleDAYL,
       usdc.address, // _usdc,
       rate, // _rate,

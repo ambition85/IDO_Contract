@@ -61,10 +61,19 @@ module.exports = {
       gas: 2100000,
       gasPrice: 8000000000
     },
-    avalancheFuji: {
+    testnet: {
       url: `https://api.avax-test.network/ext/bc/C/rpc`,
-      tags: ["ido", "presale", "test"],
       chainId: 43113,
+      accounts: real_accounts,
+      gas: 'auto',
+      gasPrice: 25000000000,
+      blockGasLimit: 0x1fffffffffffff,
+      allowUnlimitedContractSize: true,
+      timeout: 1800000
+    },
+    mainnet: {
+      url: `https://api.avax.network/ext/bc/C/rpc`,
+      chainId: 43114,
       accounts: real_accounts,
       gas: 'auto',
       gasPrice: 25000000000,
@@ -78,6 +87,6 @@ module.exports = {
     currency: "USD",
   },
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY,
+    apiKey: process.env.API_KEY,
   },
 };
