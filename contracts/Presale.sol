@@ -45,6 +45,9 @@ contract Presale is Ownable {
     // Time for Presale End
     uint256 public endTime;
 
+    // Time for Distribution
+    uint256 public claimTime;
+
     // Address for Treasury wallet - USDC invest should go there
     address public treasury;
 
@@ -66,6 +69,7 @@ contract Presale is Ownable {
     struct PresaleInfo {
         uint256 _startTime;
         uint256 _endTime;
+        uint256 _claimTime;
         address _presaleDAYL;
         address _usdc;
         uint256 _rate;
@@ -81,7 +85,9 @@ contract Presale is Ownable {
 
     constructor(PresaleInfo memory info) {
         require(
-            info._endTime > info._startTime && info._endTime > block.timestamp,
+            info._endTime > info._startTime &&
+                info._claimTime > info._endTime &&
+                info._endTime > block.timestamp,
             "Wrong Endtime"
         );
         require(info._rate > 0, "Invalid Presale Rate");
@@ -101,6 +107,7 @@ contract Presale is Ownable {
         // Configure time frames for presale
         startTime = info._startTime;
         endTime = info._endTime;
+        claimTime = info._claimTime;
 
         // Configure Token address
         presaleDAYL = IPresaleDAYL(info._presaleDAYL);
@@ -178,7 +185,7 @@ contract Presale is Ownable {
     function withdraw() external {
         // Revert presale not ended or softcap reached
         require(
-            block.timestamp >= endTime && totalUSDC < softCap,
+            block.timestamp >= claimTime && totalUSDC < softCap,
             "Unable to withdraw"
         );
 
@@ -196,11 +203,11 @@ contract Presale is Ownable {
     }
 
     function claimableAmount(address account) public view returns (uint256) {
-        if (block.timestamp < endTime) return 0;
+        if (block.timestamp < claimTime) return 0;
         UserDetail storage user = userInfo[account];
 
         // Calculate how many rounds have passed so far
-        uint256 round = (block.timestamp - endTime) / unVestingGap + 1;
+        uint256 round = (block.timestamp - claimTime) / unVestingGap + 1;
 
         // Calculate Total Rounds for this vesting program
         uint256 totalRound = vestingPeriod / unVestingGap;

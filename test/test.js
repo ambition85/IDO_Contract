@@ -28,6 +28,7 @@ describe('Test Presale DAYL Success Senario', function () {
     presale = await Presale.deploy([
       timeNow, //_startTime,
       timeNow + 3600, // _endTime,
+      timeNow + 5000, // _endTime,
       pDAYL.address, // _presaleDAYL,
       usdc.address, // _usdc,
       rate, // _rate,
@@ -177,7 +178,7 @@ describe('Test Presale DAYL Success Senario', function () {
   })
 
   it("Spent time to the end", async () => {
-    await network.provider.send("evm_increaseTime", [3600]);
+    await network.provider.send("evm_increaseTime", [5000]);
     await network.provider.send("evm_mine");
   })
 
