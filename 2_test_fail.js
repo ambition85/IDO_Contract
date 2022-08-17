@@ -2,7 +2,7 @@ const { expect } = require('chai');
 const { utils } = require('ethers');
 const { ethers } = require('hardhat');
 
-let pDAYL, presale, usdc
+let pDAYL, presale, busd
 const zeroAddress = "0x0000000000000000000000000000000000000000"
 const rate = utils.parseUnits("40", 12)
 
@@ -17,12 +17,12 @@ describe('Test Presale DAYL Success Senario', function () {
     console.log("Block time now: ", new Date(timeNow * 1000))
 
     const PresaleDAYL = await ethers.getContractFactory('PresaleDAYL')
-    pDAYL = await PresaleDAYL.deploy(treasury.address)
+    pDAYL = await PresaleDAYL.deploy()
     console.log("Presale DAYL deployed at: ", pDAYL.address)
 
-    const USDC = await ethers.getContractFactory("TestUSDC")
-    usdc = await USDC.deploy()
-    console.log("Test USDC deployed at: ", usdc.address)
+    const BUSD = await ethers.getContractFactory("TestBUSD")
+    busd = await BUSD.deploy()
+    console.log("Test BUSD deployed at: ", busd.address)
 
     const Presale = await ethers.getContractFactory('Presale')
     presale = await Presale.deploy([
@@ -30,7 +30,7 @@ describe('Test Presale DAYL Success Senario', function () {
       timeNow + 3600, // _endTime,
       timeNow + 5000, // _claimTime,
       pDAYL.address, // _presaleDAYL,
-      usdc.address, // _usdc,
+      busd.address, // _busd,
       rate, // _rate,
       ethers.utils.parseUnits("25000", 6), // _softCap - 20,000,
       ethers.utils.parseUnits("60000", 6), // _hardCap,
@@ -45,26 +45,26 @@ describe('Test Presale DAYL Success Senario', function () {
   })
 
   it("Presale DAYL set Presale", async () => {
-    await pDAYL.connect(treasury).setPresale(presale.address)
+    await pDAYL.setPresale(presale.address)
     const addr = await pDAYL.presale()
     console.log(`\n\tPresale address in DAYL token: ${addr}`)
     expect(addr).to.equal(presale.address)
   })
 
-  it("Mint Test USDC", async () => {
-    await usdc.connect(alice).mint(utils.parseUnits("10000", 6))
-    await usdc.connect(bob).mint(utils.parseUnits("1000", 6))
+  it("Mint Test BUSD", async () => {
+    await busd.connect(alice).mint(utils.parseUnits("10000", 6))
+    await busd.connect(bob).mint(utils.parseUnits("1000", 6))
   })
 
   it("Set White List users", async () => {
-    await presale.connect(treasury).addWhitelists([alice.address])
+    await presale.addWhitelists([alice.address])
     const aliceListed = await presale.whitelisted(alice.address)
     console.log(`\n\tAlice Listed: ${aliceListed}`)
     expect(aliceListed).to.equal(true)
   })
 
-  it("Alice Deposit USDC", async () => {
-    await usdc.connect(alice).approve(presale.address, utils.parseUnits("100000000000", 6))
+  it("Alice Deposit BUSD", async () => {
+    await busd.connect(alice).approve(presale.address, utils.parseUnits("100000000000", 6))
 
     await presale.connect(alice).deposit(rate.mul(utils.parseUnits("10000", 6)))
     const aliceInfo = await presale.userInfo(alice.address)
@@ -75,14 +75,14 @@ describe('Test Presale DAYL Success Senario', function () {
   })
 
   it("Set White List users more", async () => {
-    await presale.connect(treasury).addWhitelists([bob.address])
+    await presale.addWhitelists([bob.address])
     const bobListed = await presale.whitelisted(bob.address)
     console.log(`\n\tbob Listed: ${bobListed}`)
     expect(bobListed).to.equal(true)
   })
 
-  it("Bob Deposit USDC", async () => {
-    await usdc.connect(bob).approve(presale.address, utils.parseUnits("100000000000", 6))
+  it("Bob Deposit BUSD", async () => {
+    await busd.connect(bob).approve(presale.address, utils.parseUnits("100000000000", 6))
 
     await presale.connect(bob).deposit(rate.mul(utils.parseUnits("1000", 6)))
     const bobInfo = await presale.userInfo(bob.address)
@@ -98,25 +98,24 @@ describe('Test Presale DAYL Success Senario', function () {
   })
 
   it("Set Vault Ratio", async () => {
-    await presale.connect(treasury).setMinVault(10)
+    await presale.setMinVault(10)
     const ratio = await presale.minToVault()
     console.log(`\n\tVault Ratio is ${Number(ratio)}`)
   })
 
-  it("Withdraw USDC", async () => {
-    const total = await presale.totalUSDC()
-    await presale.connect(treasury).moveFunds()
-    const tVal = await usdc.balanceOf(treasury.address)
-    const vVal = await usdc.balanceOf(vault.address)
+  it("Withdraw BUSD", async () => {
+    const total = await presale.totalBUSD()
+    const tVal = await busd.balanceOf(treasury.address)
+    const vVal = await busd.balanceOf(vault.address)
 
-    console.log(`\n\tVault have ${utils.formatUnits(tVal, 6)}`)
-    console.log(`\n\tTreasury have ${utils.formatUnits(vVal, 6)}`)
+    console.log(`\n\tVault have ${utils.formatUnits(vVal, 6)}`)
+    console.log(`\n\tTreasury have ${utils.formatUnits(tVal, 6)}`)
 
     expect(tVal).to.equal(0)
     expect(vVal).to.equal(total.div(10))
   })
 
-  it("Withdraw USDC will be reverted", async () => {
+  it("Withdraw BUSD will be reverted", async () => {
     await expect(presale.connect(alice).withdraw()).to.revertedWith("Unable to withdraw")
   })
 
@@ -125,21 +124,23 @@ describe('Test Presale DAYL Success Senario', function () {
     await network.provider.send("evm_mine");
   })
 
-  it("User withdraw usdc", async () => {
+  it("User withdraw busd", async () => {
+    await presale.setWithdrawable()
+
     const aliceDeposit = (await presale.userInfo(alice.address)).depositAmount
     console.log("\n\tAlice Deposit: ", utils.formatUnits(aliceDeposit, 6))
 
-    oldBal = await usdc.balanceOf(alice.address)
+    oldBal = await busd.balanceOf(alice.address)
     await presale.connect(alice).withdraw()
-    newBal = await usdc.balanceOf(alice.address)
+    newBal = await busd.balanceOf(alice.address)
     console.log("\n\tAlice Withdraw: ", utils.formatUnits(newBal.sub(oldBal), 6))
 
     expect(newBal.sub(oldBal)).to.equal(aliceDeposit.mul(9).div(10))
   })
 
-  it("Withdraw USDC will be reverted", async () => {
-    await expect(presale.connect(alice).withdraw()).to.revertedWith("No USDC To Withdraw")
-  })
+  // it("Withdraw BUSD will be reverted", async () => {
+  //   await expect(presale.connect(alice).withdraw()).to.revertedWith("No BUSD To Withdraw")
+  // })
 
   it("User Claim Token should fail", async () => {
     const aliceClaimable = await presale.claimableAmount(alice.address)

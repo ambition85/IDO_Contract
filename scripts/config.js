@@ -1,15 +1,15 @@
 exports.config = {
-    usdc: "0x158395BAf9169996b109eDFC9442D7Ab855Cd330",
-    treasury: "0x2CFd78a2C5D51ff9953046955CA1De661f3F2376",
-    vault: "0xCBFb96CEed739b372f8cBb65c4c1e5b93923b36B",
-    startTime: "1657557000",
-    endTime: "1658558000",
-    claimTime: "1658559000",
-    softCap: "2500000",
-    hardCap: "6000000",
-    minPerWallet: "30",
-    maxPerWallet: "30000",
+    busd: "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56",
+    treasury: "0x114DFe33Cc49A463E3F2165e3e3AF50c3Ad5dA3e",
+    vault: "0xDC04fb323831D6377EDdAef2090318A2FFfA226D",
+    startTime: "1660489200", // 2022-8-14 3PM UTC
+    endTime: "1663167600", // 2022-9-14 3PM UTC
+    claimTime: "1663254000", // 2022-9-15 3PM UTC
+    softCap: "50000",
+    hardCap: "180000",
+    minPerWallet: "100",
+    maxPerWallet: "5000",
     rate: "40",
-    vestingPeriod: 3600,
-    unvestingGap: 600,
+    // vestingPeriod: 12960000,
+    // unvestingGap: 2592000,
 }

@@ -21,6 +21,9 @@ real_accounts = undefined;
 if (process.env.PRIVATE_KEY) {
   real_accounts = [process.env.PRIVATE_KEY];
 }
+const alchemyApiKey = process.env.ALCHEMY_API_KEY ?? "NO_ALCHEMY_API_KEY";
+
+const apiKey = process.env.IS_AVALANCHE == "True" ? process.env.AVALANCHE_API_KEY : process.env.ETHERSCAN_API_KEY
 
 // You need to export an object to set up your config
 // Go to https://hardhat.org/config/ to learn more
@@ -46,7 +49,7 @@ module.exports = {
       tags: ["ido", "presale", "test"],
     },
     ropsten: {
-      url: `https://ropsten.infura.io/v3/${process.env.INFURA_ID}`,
+      url: `https://eth-ropsten.alchemyapi.io/v2/${alchemyApiKey}`,
       tags: ["ido", "presale", "test"],
       chainId: 3,
       accounts: real_accounts,
@@ -54,7 +57,7 @@ module.exports = {
       gasPrice: 8000000000
     },
     rinkeby: {
-      url: `https://rinkeby.infura.io/v3/${process.env.INFURA_ID}`,
+      url: `https://eth-rinkeby.alchemyapi.io/v2/${alchemyApiKey}`,
       tags: ["ido", "presale", "test"],
       chainId: 4,
       accounts: real_accounts,
@@ -87,6 +90,6 @@ module.exports = {
     currency: "USD",
   },
   etherscan: {
-    apiKey: process.env.API_KEY,
+    apiKey: apiKey,
   },
 };

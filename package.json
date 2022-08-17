@@ -26,6 +26,7 @@
     "test": "hardhat test",
     "deploy": "hardhat run scripts/deploy.js",
     "deploy:mainnet": "hardhat --network mainnet run scripts/deploy.js",
-    "deploy:testnet": "hardhat --network testnet run scripts/deploy.js"
+    "deploy:testnet": "hardhat --network testnet run scripts/deploy.js",
+    "deploy:ropsten": "hardhat --network ropsten run scripts/deploy.js"
   }
 }

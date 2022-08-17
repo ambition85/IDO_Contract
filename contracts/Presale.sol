@@ -6,10 +6,10 @@ import "./interfaces/IPresaleDAYL.sol";
 import "hardhat/console.sol";
 
 contract Presale is Ownable {
-    IERC20 public usdc;
+    IERC20 public busd;
     IPresaleDAYL public presaleDAYL;
 
-    // Rate of USDC and presale DAYL = 1: 40 * 1e12
+    // Rate of BUSD and presale DAYL = 1: 40 * 1e12
     uint256 public rate;
 
     // hardcap of 6M * 1e6
@@ -24,11 +24,11 @@ contract Presale is Ownable {
     // Maximum deposit 30000 * 1e6
     uint256 public maxPerWallet;
 
-    // Total Vesting Period
-    uint256 public vestingPeriod;
+    // // Total Vesting Period
+    // uint256 public vestingPeriod;
 
-    // Unvesting Gap
-    uint256 public unVestingGap;
+    // // Unvesting Gap
+    // uint256 public unVestingGap;
 
     struct UserDetail {
         uint256 depositAmount;
@@ -48,37 +48,37 @@ contract Presale is Ownable {
     // Time for Distribution
     uint256 public claimTime;
 
-    // Address for Treasury wallet - USDC invest should go there
+    // Address for Treasury wallet - BUSD invest should go there
     address public treasury;
 
-    // Address for Vault wallet - USDC invest should go there
+    // Address for Vault wallet - BUSD invest should go there
     address public vault;
 
-    // Ratio of usdc withdraw between vault and treasury
+    // Ratio of busd withdraw between vault and treasury
     uint256 public vaultRatio;
-
-    // minimum vault ratio
-    uint256 public minToVault;
 
     // Total Amount Presaled
     uint256 public totalPresale;
 
-    // Total USDC deposited
-    uint256 public totalUSDC;
+    // Total BUSD deposited
+    uint256 public totalBUSD;
+
+    // Flag for users to withdraw busd
+    bool public busdWithdrawable;
 
     struct PresaleInfo {
         uint256 _startTime;
         uint256 _endTime;
         uint256 _claimTime;
         address _presaleDAYL;
-        address _usdc;
+        address _busd;
         uint256 _rate;
         uint256 _softCap;
         uint256 _hardCap;
         uint256 _maxPerWallet;
         uint256 _minPerWallet;
-        uint256 _vestingPeriod;
-        uint256 _unVestingGap;
+        // uint256 _vestingPeriod;
+        // uint256 _unVestingGap;
         address _treasury;
         address _vault;
     }
@@ -111,7 +111,7 @@ contract Presale is Ownable {
 
         // Configure Token address
         presaleDAYL = IPresaleDAYL(info._presaleDAYL);
-        usdc = IERC20(info._usdc);
+        busd = IERC20(info._busd);
 
         // Configure Presale Details
         rate = info._rate;
@@ -127,16 +127,15 @@ contract Presale is Ownable {
         minPerWallet = info._minPerWallet;
 
         // Configure Vesting
-        vestingPeriod = info._vestingPeriod;
-        unVestingGap = info._unVestingGap;
-
-        // Set treasury address as owner of presale
-        _transferOwnership(info._treasury);
+        // vestingPeriod = info._vestingPeriod;
+        // unVestingGap = info._unVestingGap;
+        vaultRatio = 10;
     }
 
-    event Deposit(address account, uint256 depositUSDC, uint256 reward);
-    event Withdraw(address account, uint256 withdrawUSDC);
+    event Deposit(address account, uint256 depositBUSD, uint256 reward);
+    event Withdraw(address account, uint256 withdrawBUSD);
     event ClaimToken(address account, uint256 reward);
+    event MoveFunds(uint256 toVault, uint256 toTreasury);
 
     function addWhitelists(address[] memory _whitelist) external onlyOwner {
         for (uint256 i = 0; i < _whitelist.length; i++) {
@@ -154,70 +153,73 @@ contract Presale is Ownable {
         require(block.timestamp >= startTime, "Presale Not Started");
         require(block.timestamp <= endTime, "Presale Already Ended");
         require(whitelisted[msg.sender], "Not Whitelisted User");
-        uint256 depositUSDC = _amount / rate;
+        uint256 depositBUSD = _amount / rate;
         UserDetail storage user = userInfo[msg.sender];
 
         // Check Hardcap
-        require(totalUSDC + depositUSDC <= hardCap, "Exceeds Hardcap");
+        require(totalBUSD + depositBUSD <= hardCap, "Exceeds Hardcap");
 
         // Check min and max deposit amount
         require(
-            (depositUSDC > 0 &&
-                user.depositAmount + depositUSDC >= minPerWallet &&
-                user.depositAmount + depositUSDC <= maxPerWallet),
-            "Invalid USDC deposit"
+            (depositBUSD > 0 &&
+                user.depositAmount + depositBUSD >= minPerWallet &&
+                user.depositAmount + depositBUSD <= maxPerWallet),
+            "Invalid BUSD deposit"
         );
 
-        // Receive USDC from user
-        usdc.transferFrom(msg.sender, address(this), depositUSDC);
+        // Receive BUSD from user
+        uint256 toVault = (depositBUSD * vaultRatio) / 100;
+
+        busd.transferFrom(msg.sender, vault, toVault);
+        busd.transferFrom(msg.sender, treasury, depositBUSD - toVault);
 
         // Update User Info
-        user.depositAmount += depositUSDC;
+        user.depositAmount += depositBUSD;
         user.totalReward += _amount;
 
         // Update Total Info
-        totalUSDC += depositUSDC;
+        totalBUSD += depositBUSD;
         totalPresale += _amount;
 
-        emit Deposit(msg.sender, depositUSDC, _amount);
+        emit Deposit(msg.sender, depositBUSD, _amount);
     }
 
     function withdraw() external {
         // Revert presale not ended or softcap reached
         require(
-            block.timestamp >= claimTime && totalUSDC < softCap,
+            block.timestamp >= claimTime &&
+                totalBUSD < softCap &&
+                busdWithdrawable,
             "Unable to withdraw"
         );
 
         // Calculate User's withdrawable amount, e.g. deposit * 0.9
         UserDetail storage user = userInfo[msg.sender];
-        uint256 withdrawable = (user.depositAmount * (100 - minToVault)) / 100;
+        uint256 withdrawable = (user.depositAmount * (100 - vaultRatio)) / 100;
 
-        require(withdrawable > 0, "No USDC To Withdraw");
+        require(withdrawable > 0, "No BUSD To Withdraw");
 
-        // Transfer usdc to user
-        usdc.transfer(msg.sender, withdrawable);
+        // Transfer busd to user
+        busd.transfer(msg.sender, withdrawable);
         user.depositAmount = 0;
 
         emit Withdraw(msg.sender, withdrawable);
     }
 
     function claimableAmount(address account) public view returns (uint256) {
-        if (block.timestamp < claimTime || totalUSDC < softCap) return 0;
+        if (block.timestamp < claimTime || totalBUSD < softCap) return 0;
         UserDetail storage user = userInfo[account];
 
-        // Calculate how many rounds have passed so far
-        uint256 round = (block.timestamp - claimTime) / unVestingGap + 1;
+        // // Calculate how many rounds have passed so far
+        // uint256 round = (block.timestamp - claimTime) / unVestingGap + 1;
 
-        // Calculate Total Rounds for this vesting program
-        uint256 totalRound = vestingPeriod / unVestingGap;
+        // // Calculate Total Rounds for this vesting program
+        // uint256 totalRound = vestingPeriod / unVestingGap;
 
-        // if round is bigger than total, make it the same as round
-        if (round > totalRound) round = totalRound;
+        // // if round is bigger than total, make it the same as round
+        // if (round > totalRound) round = totalRound;
 
-        uint256 claimable = (user.totalReward * round) /
-            totalRound -
-            user.withdrawnReward;
+        uint256 claimable = user.totalReward - user.withdrawnReward;
         return claimable;
     }
 
@@ -235,27 +237,9 @@ contract Presale is Ownable {
         emit ClaimToken(msg.sender, claimable);
     }
 
-    function moveFunds() external onlyOwner {
-        require(
-            block.timestamp >= endTime || totalUSDC >= hardCap,
-            "Presale Not Ended"
-        );
-        require(totalUSDC > 0, "No USDC To Withdraw");
-
-        uint256 toVault;
-        uint256 toTreasury;
-
-        if (totalUSDC >= softCap) {
-            // Success Presale
-            toVault = (totalUSDC * vaultRatio) / 100;
-            toTreasury = (totalUSDC * (100 - vaultRatio)) / 100;
-        } else {
-            //Failed Presale
-            toVault = (totalUSDC * minToVault) / 100;
-        }
-
-        if (toVault > 0) usdc.transfer(vault, toVault);
-        if (toTreasury > 0) usdc.transfer(treasury, toTreasury);
+    function withdrawRest() external onlyOwner {
+        uint256 busdBal = busd.balanceOf(address(this));
+        busd.transfer(vault, busdBal);
     }
 
     function setVaultRatio(uint256 _vaultRatio) external onlyOwner {
@@ -263,8 +247,56 @@ contract Presale is Ownable {
         vaultRatio = _vaultRatio;
     }
 
-    function setMinVault(uint256 _minToVault) external onlyOwner {
-        require(_minToVault < 100, "Invlaid Mimum Amount for Vault");
-        minToVault = _minToVault;
+    function setTreasury(address _treasury) external onlyOwner {
+        require(_treasury != address(0), "Invalid Treasury Address");
+        treasury = _treasury;
+    }
+
+    function setVault(address _vault) external onlyOwner {
+        require(_vault != address(0), "Invalid vault Address");
+        vault = _vault;
+    }
+
+    function setWithdrawable() external onlyOwner {
+        busdWithdrawable = true;
+    }
+
+    function setHardCap(uint256 _hardCap) external onlyOwner {
+        require(hardCap > 0, "Invalid HardCap");
+        hardCap = _hardCap;
+    }
+
+    function setSoftCap(uint256 _softCap) external onlyOwner {
+        require(softCap > 0, "Invalid SoftCap");
+        softCap = _softCap;
+    }
+
+    function setStartTime(uint256 _startTime) external onlyOwner {
+        startTime = _startTime;
+    }
+
+    function setEndTime(uint256 _endTime) external onlyOwner {
+        require(_endTime > 0, "Invalid EndTime");
+        endTime = _endTime;
+    }
+
+    function setClaimTime(uint256 _claimTime) external onlyOwner {
+        require(_claimTime > 0, "Invalid ClaimTime");
+        claimTime = _claimTime;
+    }
+
+    function migrateUserDetail(
+        address[] memory _accounts,
+        uint256[] memory _deposits
+    ) external onlyOwner {
+        require(_accounts.length == _deposits.length, "LENGTH_MISMATCH");
+
+        for (uint256 i = 0; i < _accounts.length; i++) {
+            UserDetail storage user = userInfo[_accounts[i]];
+
+            user.depositAmount = _deposits[i];
+            user.totalReward = _deposits[i] * rate;
+            user.withdrawnReward = 0;
+        }
     }
 }

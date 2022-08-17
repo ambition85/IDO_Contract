@@ -1,12 +1,12 @@
 const { ethers, run, upgrades } = require("hardhat");
 const { getAddress, keccak256, solidityPack } = require("ethers/lib/utils");
 
-exports.deployPDAYL = async function (deployer, params) {
+exports.deployPDAYL = async function (deployer) {
 	const PresaleDAYL = await ethers.getContractFactory("PresaleDAYL", {
 		signer: deployer,
 	});
 
-	const pDAYL = await PresaleDAYL.connect(deployer).deploy(params);
+	const pDAYL = await PresaleDAYL.connect(deployer).deploy();
 	await pDAYL.deployed();
 
 	return pDAYL;
@@ -23,15 +23,15 @@ exports.deployPresale = async function (deployer, params) {
 	return p;
 };
 
-exports.deployUSDC = async function (deployer) {
-	const USDC = await ethers.getContractFactory("TestUSDC", {
+exports.deployBUSD = async function (deployer) {
+	const BUSD = await ethers.getContractFactory("TestBUSD", {
 		signer: deployer,
 	});
 
-	const usdc = await USDC.connect(deployer).deploy();
-	await usdc.deployed();
+	const busd = await BUSD.connect(deployer).deploy();
+	await busd.deployed();
 
-	return usdc;
+	return busd;
 };
 
 exports.verifyContract = async function (contract, params) {

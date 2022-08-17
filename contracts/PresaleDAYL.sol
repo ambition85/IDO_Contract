@@ -7,9 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 contract PresaleDAYL is ERC20, Ownable {
     address public presale;
 
-    constructor(address owner) ERC20("Presale Daylight", "DAYL") {
-        _transferOwnership(owner);
-    }
+    constructor() ERC20("Presale Daylight", "DAYL") {}
 
     function setPresale(address _presale) public onlyOwner {
         require(_presale != address(0), "Invalid Presale Address");
