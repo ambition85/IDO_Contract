@@ -23,7 +23,7 @@ if (process.env.PRIVATE_KEY) {
 }
 const alchemyApiKey = process.env.ALCHEMY_API_KEY ?? "NO_ALCHEMY_API_KEY";
 
-const apiKey = process.env.IS_AVALANCHE == "True" ? process.env.AVALANCHE_API_KEY : process.env.ETHERSCAN_API_KEY
+const apiKey = process.env.IS_AVALANCHE == "True" ? process.env.AVALANCHE_API_KEY : process.env.BSCSCAN_API_KEY
 
 // You need to export an object to set up your config
 // Go to https://hardhat.org/config/ to learn more
@@ -83,6 +83,11 @@ module.exports = {
       blockGasLimit: 0x1fffffffffffff,
       allowUnlimitedContractSize: true,
       timeout: 1800000
+    },
+    bsc_mainnet: {
+      url: "https://bsc-dataseed.binance.org/",
+      chainId: 56,
+      accounts: real_accounts,
     }
   },
   gasReporter: {

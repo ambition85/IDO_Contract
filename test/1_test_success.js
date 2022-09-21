@@ -4,7 +4,8 @@ const { ethers } = require('hardhat');
 
 let pDAYL, presale, busd
 const zeroAddress = "0x0000000000000000000000000000000000000000"
-const rate = utils.parseUnits("40", 12)
+const rate = utils.parseUnits("40", 0)
+const depositors = require("../migration/depositor.json")
 
 describe('Test Presale DAYL Success Senario', function () {
 
@@ -32,10 +33,10 @@ describe('Test Presale DAYL Success Senario', function () {
       pDAYL.address, // _presaleDAYL,
       busd.address, // _busd,
       rate, // _rate,
-      ethers.utils.parseUnits("10000", 6), // _softCap - 20,000,
-      ethers.utils.parseUnits("60000", 6), // _hardCap,
-      ethers.utils.parseUnits("5000", 6), // _maxPerWallet,
-      ethers.utils.parseUnits("100", 6), // _minPerWallet,
+      ethers.utils.parseUnits("10000", 18), // _softCap - 20,000,
+      ethers.utils.parseUnits("60000", 18), // _hardCap,
+      ethers.utils.parseUnits("5000", 18), // _maxPerWallet,
+      ethers.utils.parseUnits("100", 18), // _minPerWallet,
       treasury.address, // _treasury
       vault.address, // _vault
     ])
@@ -82,8 +83,8 @@ describe('Test Presale DAYL Success Senario', function () {
   })
 
   it("Mint Test BUSD", async () => {
-    await busd.connect(alice).mint(utils.parseUnits("1000", 6))
-    await busd.connect(bob).mint(utils.parseUnits("1000", 6))
+    await busd.connect(alice).mint(utils.parseUnits("1000", 18))
+    await busd.connect(bob).mint(utils.parseUnits("1000", 18))
   })
 
   it("Set White List users", async () => {
@@ -94,25 +95,25 @@ describe('Test Presale DAYL Success Senario', function () {
   })
 
   it("Deposit will be revert with minimum check msg", async () => {
-    await expect(presale.connect(alice).deposit(rate.mul(utils.parseUnits("29", 6)))).to.revertedWith("Invalid BUSD deposit")
+    await expect(presale.connect(alice).deposit(rate.mul(utils.parseUnits("29", 18)))).to.revertedWith("Invalid BUSD deposit")
   })
 
   it("Alice Deposit BUSD", async () => {
-    await busd.connect(alice).approve(presale.address, utils.parseUnits("100000000000", 6))
+    await busd.connect(alice).approve(presale.address, utils.parseUnits("100000000000", 18))
 
-    await presale.connect(alice).deposit(rate.mul(utils.parseUnits("1000", 6)))
+    await presale.connect(alice).deposit(rate.mul(utils.parseUnits("1000", 18)))
     const aliceInfo = await presale.userInfo(alice.address)
-    console.log(`\n\tAlice Deposited: ${utils.formatUnits(aliceInfo.depositAmount, 6)}`)
-    expect(aliceInfo.depositAmount).to.equal(utils.parseUnits("1000", 6))
+    console.log(`\n\tAlice Deposited: ${utils.formatUnits(aliceInfo.depositAmount, 18)}`)
+    expect(aliceInfo.depositAmount).to.equal(utils.parseUnits("1000", 18))
     console.log(`\n\tAlice Total Reward: ${utils.formatEther(aliceInfo.totalReward)}`)
     expect(aliceInfo.totalReward).to.equal(utils.parseEther("40000"))
   })
 
   it("Move BUSD during presale", async () => {
     const total = await presale.totalBUSD()
-    console.log("\n\tTotal BUSD: ", utils.formatUnits(total, 6))
+    console.log("\n\tTotal BUSD: ", utils.formatUnits(total, 18))
     const vaultBal = await busd.balanceOf(vault.address)
-    console.log("\n\tVault BUSD: ", utils.formatUnits(vaultBal, 6))
+    console.log("\n\tVault BUSD: ", utils.formatUnits(vaultBal, 18))
     expect(vaultBal).to.equal(total.div(10))
   })
 
@@ -132,47 +133,47 @@ describe('Test Presale DAYL Success Senario', function () {
   })
 
   it("Bob Deposit 100 BUSD", async () => {
-    await busd.connect(bob).approve(presale.address, utils.parseUnits("100000000000", 6))
+    await busd.connect(bob).approve(presale.address, utils.parseUnits("100000000000", 18))
 
-    await presale.connect(bob).deposit(rate.mul(utils.parseUnits("100", 6)))
+    await presale.connect(bob).deposit(rate.mul(utils.parseUnits("100", 18)))
     const bobInfo = await presale.userInfo(bob.address)
-    console.log(`\n\tBob Deposited: ${utils.formatUnits(bobInfo.depositAmount, 6)}`)
-    expect(bobInfo.depositAmount).to.equal(utils.parseUnits("100", 6))
+    console.log(`\n\tBob Deposited: ${utils.formatUnits(bobInfo.depositAmount, 18)}`)
+    expect(bobInfo.depositAmount).to.equal(utils.parseUnits("100", 18))
     console.log(`\n\tBob Total Reward: ${utils.formatEther(bobInfo.totalReward)}`)
     expect(bobInfo.totalReward).to.equal(utils.parseEther("4000"))
   })
 
   it("Move BUSD during presale", async () => {
     const total = await presale.totalBUSD()
-    console.log("\n\tTotal BUSD: ", utils.formatUnits(total, 6))
+    console.log("\n\tTotal BUSD: ", utils.formatUnits(total, 18))
     const vaultBal = await busd.balanceOf(vault.address)
-    console.log("\n\tVault BUSD: ", utils.formatUnits(vaultBal, 6))
+    console.log("\n\tVault BUSD: ", utils.formatUnits(vaultBal, 18))
     expect(vaultBal).to.equal(total.div(10))
   })
 
   it("Move BUSD during presale", async () => {
     const total = await presale.totalBUSD()
-    console.log("\n\tTotal BUSD: ", utils.formatUnits(total, 6))
+    console.log("\n\tTotal BUSD: ", utils.formatUnits(total, 18))
     const vaultBal = await busd.balanceOf(vault.address)
-    console.log("\n\tVault BUSD: ", utils.formatUnits(vaultBal, 6))
+    console.log("\n\tVault BUSD: ", utils.formatUnits(vaultBal, 18))
     expect(vaultBal).to.equal(total.div(10))
   })
 
   it("Mint Test BUSD", async () => {
-    await busd.connect(alice).mint(utils.parseUnits("300000", 6))
-    await busd.connect(bob).mint(utils.parseUnits("300000", 6))
+    await busd.connect(alice).mint(utils.parseUnits("300000", 18))
+    await busd.connect(bob).mint(utils.parseUnits("300000", 18))
   })
 
   it("Deposit will be revert with maximum check msg", async () => {
-    await expect(presale.connect(bob).deposit(rate.mul(utils.parseUnits("5001", 6)))).to.revertedWith("Invalid BUSD deposit")
+    await expect(presale.connect(bob).deposit(rate.mul(utils.parseUnits("5001", 18)))).to.revertedWith("Invalid BUSD deposit")
   })
 
   it("Deposit Until SoftCap reaches", async () => {
-    await presale.connect(alice).deposit(rate.mul(utils.parseUnits("4000", 6)))
+    await presale.connect(alice).deposit(rate.mul(utils.parseUnits("4000", 18)))
 
     const aliceInfo = await presale.userInfo(alice.address)
-    console.log(`\n\tAlice Deposited: ${utils.formatUnits(aliceInfo.depositAmount, 6)}`)
-    expect(aliceInfo.depositAmount).to.equal(utils.parseUnits("5000", 6))
+    console.log(`\n\tAlice Deposited: ${utils.formatUnits(aliceInfo.depositAmount, 18)}`)
+    expect(aliceInfo.depositAmount).to.equal(utils.parseUnits("5000", 18))
     console.log(`\n\tAlice Total Reward: ${utils.formatEther(aliceInfo.totalReward)}`)
     expect(aliceInfo.totalReward).to.equal(utils.parseEther("200000"))
 
@@ -184,18 +185,18 @@ describe('Test Presale DAYL Success Senario', function () {
   //   const tVal = await busd.balanceOf(treasury.address)
   //   const vVal = await busd.balanceOf(vault.address)
 
-  //   console.log(`\n\tVault have ${utils.formatUnits(tVal, 6)}`)
-  //   console.log(`\n\tTreasury have ${utils.formatUnits(vVal, 6)}`)
+  //   console.log(`\n\tVault have ${utils.formatUnits(tVal, 18)}`)
+  //   console.log(`\n\tTreasury have ${utils.formatUnits(vVal, 18)}`)
 
   //   expect(tVal).to.equal(total.mul(9).div(10))
   //   expect(vVal).to.equal(total.div(10))
   // })
 
   it("Bob Deposit More: ", async () => {
-    await presale.connect(bob).deposit(rate.mul(utils.parseUnits("4900", 6)))
+    await presale.connect(bob).deposit(rate.mul(utils.parseUnits("4900", 18)))
     const bobInfo = await presale.userInfo(bob.address)
-    console.log(`\n\tBob Deposited: ${utils.formatUnits(bobInfo.depositAmount, 6)}`)
-    expect(bobInfo.depositAmount).to.equal(utils.parseUnits("5000", 6))
+    console.log(`\n\tBob Deposited: ${utils.formatUnits(bobInfo.depositAmount, 18)}`)
+    expect(bobInfo.depositAmount).to.equal(utils.parseUnits("5000", 18))
     console.log(`\n\tBob Total Reward: ${utils.formatEther(bobInfo.totalReward)}`)
     expect(bobInfo.totalReward).to.equal(utils.parseEther("200000"))
   })
@@ -249,8 +250,8 @@ describe('Test Presale DAYL Success Senario', function () {
 
   it("Check Total BUSD", async () => {
     const total = await presale.totalBUSD()
-    console.log(`\n\tTotal BUSD deposit: ${utils.formatUnits(total, 6)}`)
-    expect(total).to.equal(utils.parseUnits("10000", 6))
+    console.log(`\n\tTotal BUSD deposit: ${utils.formatUnits(total, 18)}`)
+    expect(total).to.equal(utils.parseUnits("10000", 18))
   })
 
   // it("Withdraw BUSD", async () => {
@@ -259,10 +260,21 @@ describe('Test Presale DAYL Success Senario', function () {
   //   const tVal = await busd.balanceOf(treasury.address)
   //   const vVal = await busd.balanceOf(vault.address)
 
-  //   console.log(`\n\tVault have ${utils.formatUnits(tVal, 6)}`)
-  //   console.log(`\n\tTreasury have ${utils.formatUnits(vVal, 6)}`)
+  //   console.log(`\n\tVault have ${utils.formatUnits(tVal, 18)}`)
+  //   console.log(`\n\tTreasury have ${utils.formatUnits(vVal, 18)}`)
 
   //   expect(tVal).to.equal(total.mul(9).div(10))
   //   expect(vVal).to.equal(total.div(10))
   // })
+
+  it("Test Migrate", async () => {
+    const accounts = depositors.map(d => d.address)
+    const deposits = depositors.map(d => utils.parseUnits(d.amount.toString(), 12))
+    await presale.migrateUserDetail(accounts, deposits)
+    console.log("\n\tPresale set migration: ")
+    const totalBUSD = await presale.totalBUSD()
+    const totalPresale = await presale.totalPresale()
+    console.log(totalBUSD, totalPresale)
+    console.log("Total Info: ", utils.formatUnits(totalBUSD, 18), utils.formatEther(totalPresale))
+  })
 });

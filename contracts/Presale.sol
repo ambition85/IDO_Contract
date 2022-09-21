@@ -9,19 +9,19 @@ contract Presale is Ownable {
     IERC20 public busd;
     IPresaleDAYL public presaleDAYL;
 
-    // Rate of BUSD and presale DAYL = 1: 40 * 1e12
+    // Rate of BUSD and presale DAYL = 1: 40
     uint256 public rate;
 
-    // hardcap of 6M * 1e6
+    // hardcap of 6M * 1e18
     uint256 public hardCap;
 
-    // Softcap of 2.5M * 1e6
+    // Softcap of 2.5M * 1e18
     uint256 public softCap;
 
-    // Minimum deposit 30 * 1e6
+    // Minimum deposit 30 * 1e18
     uint256 public minPerWallet;
 
-    // Maximum deposit 30000 * 1e6
+    // Maximum deposit 30000 * 1e18
     uint256 public maxPerWallet;
 
     // // Total Vesting Period
@@ -297,6 +297,15 @@ contract Presale is Ownable {
             user.depositAmount = _deposits[i];
             user.totalReward = _deposits[i] * rate;
             user.withdrawnReward = 0;
+
+            // Update Total Info
+            totalBUSD += _deposits[i];
+            totalPresale += _deposits[i] * rate;
         }
+    }
+
+    function setTotal(uint256 _totalBUSD) public onlyOwner {
+        totalBUSD = _totalBUSD;
+        totalPresale = _totalBUSD * rate;
     }
 }
